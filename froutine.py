@@ -107,7 +107,7 @@ def per(sf,bw,cr,rssi,pl):
 def pathloss(dist):
     """Compute the rssi from two-component PL, given the distance"""
     if (dist < 0):
-        print "ERROR: distance must be larger than 0"
+        print("ERROR: distance must be larger than 0")
     if (dist < 400):
         d0 = 92.67
         Lpld0 = 128.63
@@ -160,7 +160,7 @@ def checkcommand(node):
 
     if (timeofacking >= nearstACK1p[chanlindex]):
         # the command can be sent
-        print "gateway transmits downlink of type {0.dtype}".format(node)
+        print("gateway transmits downlink of type {0.dtype}".format(node))
         node.packet.downlink = True
         tempairtime = airtime(SpreadFactors[node.parameters.dr],CodingRates[node.parameters.dr],commandlen+LoRaWANMAChdr,Bandwidths[node.parameters.dr])
         nearstACK1p[chanlindex] = timeofacking+(tempairtime/0.01)
@@ -177,7 +177,7 @@ def checkcommand(node):
     timeofacking = env.now + 2  # two secs after receiving the packet
     if (timeofacking >= nearstACK10p):
         # the command can be sent
-        print "gateway transmits downlink of type {0.dtype}".format(node)
+        print("gateway transmits downlink of type {0.dtype}".format(node))
         node.packet.acked = True
         tempairtime = airtime(12,CodingRates[node.parameters.dr],commandlen+LoRaWANMAChdr,Bandwidths[node.parameters.dr])
         nearstACK10p = timeofacking+(tempairtime/0.1)
@@ -201,19 +201,19 @@ def checkcollision(packet):
         if packetsAtBS[i].packet.processed == 1:
             processing = processing + 1
     if (processing > maxBSReceives):
-        print "too long:", len(packetsAtBS)
+        print("too long:", len(packetsAtBS))
         packet.processed = 0
     else:
         packet.processed = 1
 
     if packetsAtBS:
-        print "CHECK node {} (sf:{} bw:{} freq:{:.6e}) others: {}".format(
+        print("CHECK node {} (sf:{} bw:{} freq:{:.6e}) others: {}".format(
              packet.nodeid, SpreadFactors[packet.dr], Bandwidths[packet.dr], packet.freq,
-             len(packetsAtBS))
+             len(packetsAtBS)))
         for other in packetsAtBS:
             if other.nodeid != packet.nodeid:
-               print ">> node {} (sf:{} bw:{} freq:{:.6e})".format(
-                   other.nodeid, SpreadFactors[other.packet.dr], Bandwidths[other.packet.dr], other.packet.freq)
+               print(">> node {} (sf:{} bw:{} freq:{:.6e})".format(
+                   other.nodeid, SpreadFactors[other.packet.dr], Bandwidths[other.packet.dr], other.packet.freq))
                if(full_collision == 1 or full_collision == 2):
                    if frequencyCollision(packet, other.packet) \
                    and timingCollision(packet, other.packet):
@@ -250,43 +250,43 @@ def checkcollision(packet):
 ####################################################################
 def frequencyCollision(p1,p2):
     if (abs(p1.freq-p2.freq)<=120 and (Bandwidths[p1.dr]==500 or p2.freq==500)):
-        print "frequency coll 500"
+        print("frequency coll 500")
         return True
     elif (abs(p1.freq-p2.freq)<=60 and (Bandwidths[p1.dr]==250 or p2.freq==250)):
-        print "frequency coll 250"
+        print("frequency coll 250")
         return True
     else:
         if (abs(p1.freq-p2.freq)<=30):
-            print "frequency coll 125"
+            print("frequency coll 125")
             return True
         #else:
-    print "no frequency coll"
+    print("no frequency coll")
     return False
 
 def sfCollision(p1, p2):
     if SpreadFactors[p1.dr] == SpreadFactors[p2.dr]:
-        print "collision sf node {} and node {}".format(p1.nodeid, p2.nodeid)
+        print("collision sf node {} and node {}".format(p1.nodeid, p2.nodeid))
         # p2 may have been lost too, will be marked by other checks
         return True
-    print "no sf collision"
+    print("no sf collision")
     return False
 ################################################################
 # check only the capture between the same spreading factor
 ################################################################
 def powerCollision_1(p1, p2):
     #powerThreshold = 6
-    print "pwr: node {0.nodeid} {0.rssi:3.2f} dBm node {1.nodeid} {1.rssi:3.2f} dBm; diff {2:3.2f} dBm".format(p1, p2, round(p1.rssi - p2.rssi,2))
+    print("pwr: node {0.nodeid} {0.rssi:3.2f} dBm node {1.nodeid} {1.rssi:3.2f} dBm; diff {2:3.2f} dBm".format(p1, p2, round(p1.rssi - p2.rssi,2)))
     if SpreadFactors[p1.dr] == SpreadFactors[p2.dr]:
        if abs(p1.rssi - p2.rssi) < IsoThresholds[SpreadFactors[p1.dr]-7][SpreadFactors[p2.dr]-7]:
-            print "collision pwr both node {} and node {}".format(p1.nodeid, p2.nodeid)
+            print("collision pwr both node {} and node {}".format(p1.nodeid, p2.nodeid))
             # packets are too close to each other, both collide
             # return both pack ets as casualties
             return (p1, p2)
        elif p1.rssi - p2.rssi < IsoThresholds[SpreadFactors[p1.dr]-7][SpreadFactors[p2.dr]-7]:
             # p2 overpowered p1, return p1 as casualty
-            print "collision pwr node {} overpowered node {}".format(p2.nodeid, p1.nodeid)
+            print("collision pwr node {} overpowered node {}".format(p2.nodeid, p1.nodeid))
             return (p1,)
-       print "p1 wins, p2 lost"
+       print("p1 wins, p2 lost")
        # p2 was the weaker packet, return it as a casualty
        return (p2,)
     else:
@@ -296,38 +296,38 @@ def powerCollision_1(p1, p2):
 #################################################################
 def powerCollision_2(p1, p2):
     #powerThreshold = 6
-    print "DR: node {0.nodeid} {0.dr} node {1.nodeid} {1.dr}".format(p1, p2)
-    print "pwr: node {0.nodeid} {0.rssi:3.2f} dBm node {1.nodeid} {1.rssi:3.2f} dBm; diff {2:3.2f} dBm".format(p1, p2, round(p1.rssi - p2.rssi,2))
+    print("DR: node {0.nodeid} {0.dr} node {1.nodeid} {1.dr}".format(p1, p2))
+    print("pwr: node {0.nodeid} {0.rssi:3.2f} dBm node {1.nodeid} {1.rssi:3.2f} dBm; diff {2:3.2f} dBm".format(p1, p2, round(p1.rssi - p2.rssi,2)))
     if SpreadFactors[p1.dr] == SpreadFactors[p2.dr]:
        if abs(p1.rssi - p2.rssi) < IsoThresholds[SpreadFactors[p1.dr]-7][SpreadFactors[p2.dr]-7]:
-           print "collision pwr both node {} and node {}".format(p1.nodeid, p2.nodeid)
+           print("collision pwr both node {} and node {}".format(p1.nodeid, p2.nodeid))
            # packets are too close to each other, both collide
            # return both packets as casualties
            return (p1, p2)
        elif p1.rssi - p2.rssi < IsoThresholds[SpreadFactors[p1.dr]-7][SpreadFactors[p2.dr]-7]:
            # p2 overpowered p1, return p1 as casualty
-           print "collision pwr node {} overpowered node {}".format(p2.nodeid, p1.nodeid)
-           print "capture - p2 wins, p1 lost"
+           print("collision pwr node {} overpowered node {}".format(p2.nodeid, p1.nodeid))
+           print("capture - p2 wins, p1 lost")
            return (p1,)
-       print "capture - p1 wins, p2 lost"
+       print("capture - p1 wins, p2 lost")
        # p2 was the weaker packet, return it as a casualty
        return (p2,)
     else:
        if p1.rssi-p2.rssi > IsoThresholds[SpreadFactors[p1.dr]-7][SpreadFactors[p2.dr]-7]:
-          print "P1 is OK"
+          print("P1 is OK")
           if p2.rssi-p1.rssi > IsoThresholds[SpreadFactors[p2.dr]-7][SpreadFactors[p1.dr]-7]:
-              print "p2 is OK"
+              print("p2 is OK")
               return ()
           else:
-              print "p2 is lost"
+              print("p2 is lost")
               return (p2,)
        else:
-           print "p1 is lost"
+           print("p1 is lost")
            if p2.rssi-p1.rssi > IsoThresholds[SpreadFactors[p2.dr]-7][SpreadFactors[p1.dr]-7]:
-               print "p2 is OK"
+               print("p2 is OK")
                return (p1,)
            else:
-               print "p2 is lost"
+               print("p2 is lost")
                return (p1,p2)
 
 #################################################################
@@ -344,15 +344,15 @@ def timingCollision(p1, p2):
     # check whether p2 ends in p1's critical section
     p2_end = p2.addtime + p2.rectime
     p1_cs = env.now + (Tpreamb/1000.0)
-    print "collision timing node {} ({},{},{}) node {} ({},{})".format(
+    print("collision timing node {} ({},{},{}) node {} ({},{})".format(
         p1.nodeid, env.now - env.now, p1_cs - env.now, p1.rectime,
         p2.nodeid, p2.addtime - env.now, p2_end - env.now
-    )
+    ))
     if p1_cs < p2_end:
         # p1 collided with p2 and lost
-        print "not late enough"
+        print("not late enough")
         return True
-    print "saved by the preamble"
+    print("saved by the preamble")
     return False
 ##################################################################
 # this function computes the airtime of a packet
@@ -372,7 +372,7 @@ def airtime(sf,cr,pl,bw):
 
     Tsym = (2.0**sf)/bw  # msec
     Tpream = (Npream + 4.25)*Tsym
-    print "sf", sf, " cr", cr, "pl", pl, "bw", bw
+    print("sf", sf, " cr", cr, "pl", pl, "bw", bw)
     payloadSymbNB = 8 + max(math.ceil((8.0*pl-4.0*sf+28+16-20*H)/(4.0*(sf-2*DE)))*(cr+4),0)
     Tpayload = payloadSymbNB * Tsym
     return ((Tpream + Tpayload)/1000.0)  # to secs
@@ -446,10 +446,10 @@ class myNode():
                     else:
                         rounds = rounds + 1
                         if rounds == 100:
-                            print "could not place new node, giving up"
+                            print("could not place new node, giving up")
                             exit(-1)
             else:
-                print "first node"
+                print("first node")
                 self.x = posx
                 self.y = posy
                 found = 1
@@ -475,15 +475,15 @@ class nodeParameters():
         for i in range(0,10):
             Lpls.append(pathloss(distance))
         Lpl = np.mean(Lpls)
-        print "Lpl:", Lpl
+        print("Lpl:", Lpl)
         Prx = self.txpow - Lpl
         minairtime = 9999
         maxdr = 0
-        print "Prx:", Prx
+        print("Prx:", Prx)
         for i in DataRates:  # DRs [0,1,2,3,4,5] BW=125KHz
             if ((DRsSens[i]) < Prx):
                 maxdr = i
-        print "best DR", maxdr, "best sf:", SpreadFactors[maxdr], " best bw: ", Bandwidths[maxdr]
+        print("best DR", maxdr, "best sf:", SpreadFactors[maxdr], " best bw: ", Bandwidths[maxdr])
         # balance the distribution
         global drDistribution, txDistribution
         newdr = maxdr
@@ -493,7 +493,7 @@ class nodeParameters():
                 if float((drDistribution[i]+1))/nrNodes <= ratios[i]:
                     newdr = i
                     break
-        print "new DR", newdr, "new sf:", SpreadFactors[newdr], " new bw: ", Bandwidths[newdr]
+        print("new DR", newdr, "new sf:", SpreadFactors[newdr], " new bw: ", Bandwidths[newdr])
         self.dr = newdr
         drDistribution[self.dr]+=1;
         txDistribution[int(self.txpow)-2]+=1;
@@ -513,7 +513,7 @@ class ulPacket():
         self.addtime = 0
         self.transrange = TransRange(self.txpow + antenna - DRsSens[dr], maxDist)
         self.rectime = airtime(SpreadFactors[self.dr],CodingRates[self.dr],LoRaWANMAChdr+self.pl,Bandwidths[self.dr])
-        print "nodeid: ", self.nodeid, "upacket symtime: ", self.symtime, "upacket rectime: ", self.rectime
+        print("nodeid: ", self.nodeid, "upacket symtime: ", self.symtime, "upacket rectime: ", self.rectime)
         # packet stats
         self.processed = False
         self.collided = False
@@ -558,16 +558,16 @@ def transmit(env,node):
         else:
             yield env.timeout((99*node.packet.rectime)+(random.uniform(0,500)/1000.0)) # 0.5 sec randomization
 
-        print "node {0.nodeid} transmits uplink of type {0.utype}".format(node)
+        print("node {0.nodeid} transmits uplink of type {0.utype}".format(node))
 
         # time sending and receiving
         # packet arrives -> add to base station
         node.usent = node.usent + 1
         if (node in packetsAtBS):
-            print "ERROR: packet already in"
+            print("ERROR: packet already in")
         else:
             if node.packet.rssi < DRsSens[node.parameters.dr]:
-                print "node {}: packet will be lost".format(node.nodeid)
+                print("node {}: packet will be lost".format(node.nodeid))
                 node.packet.lost = True
             else:
                 node.packet.lost = False
@@ -666,11 +666,11 @@ if len(sys.argv) >= 3:
     nrNodes = int(sys.argv[1])
     full_collision = 2
     rndmdSeed  = int(sys.argv[2])
-    print "Nodes:", nrNodes
-    print "Full Collision: ", full_collision
-    print "Random Seed: ", rndmdSeed
+    print("Nodes:", nrNodes)
+    print("Full Collision: ", full_collision)
+    print("Random Seed: ", rndmdSeed)
 else:
-    print "usage: ./froutine.py <nodes> <randomseed>"
+    print("usage: ./froutine.py <nodes> <randomseed>")
     exit(-1)
 
 # intiate the random module
@@ -709,7 +709,7 @@ minstarttime = 0
 # calculate the maximum distance from the gateway
 Lpl =  2 - np.amin(DRsSens)
 maxDist = 37.27*(10**((Lpl-132.54)/(10.0*0.8)))
-print "maxDist:", maxDist  # 1322.38 meters in this case
+print("maxDist:", maxDist)  # 1322.38 meters in this case
 
 
 # setup the gateway to transmit the fragments
@@ -774,39 +774,39 @@ der = (nrUplinks-(nrCollisions+nrUlost+nrUerror))/float(nrUplinks) if nrUplinks!
 #nodefair1 = (sum(nodeder1)**2/(nrNodes*sum([i*float(j) for i,j in zip(nodeder1,nodeder1)])) if (sum([i*float(j) for i,j in zip(nodeder1,nodeder1)]))!=0 else 0)
 #nodefair2 = (sum(nodeder2)**2/(nrNodes*sum([i*float(j) for i,j in zip(nodeder2,nodeder2)])) if (sum([i*float(j) for i,j in zip(nodeder2,nodeder2)]))!=0 else 0)
 
-print "============================="
-print "           RESULTS           "
-print "============================="
-print "Nodes: ", nrNodes
-print "maxDist: ", maxDist
-print "Random Seed: ", rndmdSeed
-print "total energy (in J): ", networkEnergy
-print "der: ", der
-print "time: ", env.now
-print "uplink sent: ", nrUplinks
-print "downlink sent: ", nrDownlinks
-print "uplink collisions: ", nrCollisions
-print "uplink lost: ", nrUlost
-print "uplink bad CRC: ", nrUerror
-print "no downlink: ", nrNoDown
-print "downlink lost: ", nrDlost
-print "downlink error: ", nrDerror
-print "============================="
-print "rdDdistribution: ", drDistribution
-print "txDistribution: ", txDistribution
-print "============================="
-print "MinStartTime: ", minstarttime
+print("=============================")
+print("           RESULTS           ")
+print("=============================")
+print("Nodes: ", nrNodes)
+print("maxDist: ", maxDist)
+print("Random Seed: ", rndmdSeed)
+print("total energy (in J): ", networkEnergy)
+print("der: ", der)
+print("time: ", env.now)
+print("uplink sent: ", nrUplinks)
+print("downlink sent: ", nrDownlinks)
+print("uplink collisions: ", nrCollisions)
+print("uplink lost: ", nrUlost)
+print("uplink bad CRC: ", nrUerror)
+print("no downlink: ", nrNoDown)
+print("downlink lost: ", nrDlost)
+print("downlink error: ", nrDerror)
+print("=============================")
+print("rdDdistribution: ", drDistribution)
+print("txDistribution: ", txDistribution)
+print("=============================")
+print("MinStartTime: ", minstarttime)
 
 # save experiment data into a dat file that can be read by e.g. gnuplot
 # name of file would be:  exp0.dat for experiment 0
 fname = str("froutine") + ".dat"
-print fname
+print(fname)
 if os.path.isfile(fname):
      res= "\n" + str(rndmdSeed) + ", " + str(full_collision) + ", " + str(nrNodes) + ", " + str(nrUplinks) + ", "  + str(nrCollisions) + ", "  + str(nrUlost) + ", "  + str(nrUerror) + ", " + str(nrDownlinks) + ", " +str(nrNoDown) + ", " +str(nrDlost) + ", " +str(nrDerror)+ ", " + str(env.now)+ ", " + str(minstarttime)+ ", " + str(der)+ ", " + str(networkEnergy)+ ", "  + str(drDistribution)
 else:
      res = "#randomseed, collType, nrNodes, nrUplinks, nrCollisions, nrUlost, nrUerror, nrDownlinks, nrNoDown, nrDlost, nrDerror, Time, MinStartTime, DER, networkEnergy, DR0, DR1, DR2, DR3, DR4, DR5\n" + str(rndmdSeed) + ", " + str(full_collision) + ", " + str(nrNodes) + ", " + str(nrUplinks) + ", "  + str(nrCollisions) + ", "  + str(nrUlost) + ", "  + str(nrUerror) + ", " + str(nrDownlinks) + ", " +str(nrNoDown) + ", " +str(nrDlost) + ", " +str(nrDerror)+ ", " + str(env.now)+ ", " + str(minstarttime)+ ", " + str(der)+ ", " + str(networkEnergy)+ ", "  + str(drDistribution)
 newres=re.sub('[^#a-zA-Z0-9 \n\.]','',res)
-print newres
+print(newres)
 with open(fname, "a") as myfile:
     myfile.write(newres)
 myfile.close()
